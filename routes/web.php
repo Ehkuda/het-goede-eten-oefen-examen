@@ -2,13 +2,17 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\GerechtController;
+use App\Http\Controllers\GerechtController;  // ← dit moet er staan!
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+// Dashboard met kok-redirect
 Route::get('/dashboard', function () {
+    if (auth()->check() && auth()->user()->role === 'kok') {
+        return redirect()->route('gerechten.index');
+    }
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -19,17 +23,14 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'kok'])->group(function () {
-
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-
-    // Receptenbeheer (CRUD)
+    // Receptenbeheer (CRUD) – correcte class-naam
     Route::resource('gerechten', GerechtController::class);
 
     // Printen
     Route::get('/gerechten/print', [GerechtController::class, 'print'])
         ->name('gerechten.print');
+    
+    Route::get('/menukaart', [GerechtController::class, 'menukaart'])->name('menukaart.index');
 });
 
 require __DIR__.'/auth.php';

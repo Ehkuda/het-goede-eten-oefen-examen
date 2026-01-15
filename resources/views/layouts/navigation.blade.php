@@ -10,6 +10,7 @@
                     </a>
                 </div>
 
+
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
@@ -17,6 +18,12 @@
                     </x-nav-link>
                 </div>
             </div>
+
+            @if (auth()->check() && auth()->user()->role === 'kok')
+            <x-nav-link :href="route('menukaart.index')" :active="request()->routeIs('menukaart.index')">
+                Menukaart
+            </x-nav-link>
+            @endif
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">

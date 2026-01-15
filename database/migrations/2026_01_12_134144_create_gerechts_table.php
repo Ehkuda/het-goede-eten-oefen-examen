@@ -9,13 +9,19 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('gerechts', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
+  public function up(): void
+{
+    Schema::create('gerechten', function (Blueprint $table) {     // let op: gerechten (meervoud)
+        $table->id();
+        $table->string('naam');
+        $table->foreignId('categorie_id')
+              ->constrained('categorieen')
+              ->onDelete('cascade');
+        $table->text('bereidingswijze')->nullable();
+        $table->integer('bereidingstijd_minuten')->nullable();
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.
