@@ -24,7 +24,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'kok'])->group(function () {
     // Receptenbeheer (CRUD) – correcte class-naam
-    Route::resource('gerechten', GerechtController::class);
+    Route::resource('gerechten', GerechtController::class)->parameter('gerechten', 'gerecht');
 
     // Printen
     Route::get('/gerechten/print', [GerechtController::class, 'print'])

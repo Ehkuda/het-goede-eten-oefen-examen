@@ -2,34 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Gerecht;
 use App\Models\Categorie;
+use Illuminate\Http\Request;
 
 class GerechtController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Overzicht van alle gerechten
      */
     public function index()
     {
-        $gerechten = Gerecht::with('categorie')->latest()->get();
+        $gerechten = Gerecht::with('categorie')
+            ->latest()
+            ->get();
+
         return view('gerechten.index', compact('gerechten'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Formulier om een gerecht aan te maken
      */
-public function create()
-{
-    $categorieen = Categorie::whereIn('naam', ['Voorgerecht', 'Hoofdgerecht'])->get();
-    // of gewoon alle: $categorieen = Categorie::all();
+    public function create()
+    {
+        $categorieen = Categorie::whereIn('naam', [
+            'Voorgerecht',
+            'Hoofdgerecht',
+        ])->get();
 
-    return view('gerechten.create', compact('categorieen'));
-}
+        return view('gerechten.create', compact('categorieen'));
+    }
 
     /**
-     * Store a newly created resource in storage.
+     * Opslaan van een nieuw gerecht
      */
     public function store(Request $request)
     {
@@ -37,46 +42,52 @@ public function create()
             'naam'                   => 'required|string|max:255',
             'categorie_id'           => 'required|exists:categorieen,id',
             'bereidingswijze'        => 'nullable|string',
-            'bereidingstijd_minuten' => 'nullable|numeric|min:1|integer',
+            'bereidingstijd_minuten' => 'nullable|integer|min:1',
         ]);
 
         $gerecht = Gerecht::create($validated);
 
-        if ($request->has('ingrediënten') && is_array($request->ingrediënten)) {
+        if (is_array($request->ingrediënten ?? null)) {
             foreach ($request->ingrediënten as $ingrediënt) {
-                if (!empty($ingrediënt['naam']) && !empty($ingrediënt['hoeveelheid'])) {
+                if (
+                    !empty($ingrediënt['naam']) &&
+                    !empty($ingrediënt['hoeveelheid'])
+                ) {
                     $gerecht->ingrediënten()->create([
-                        'naam'       => $ingrediënt['naam'],
+                        'naam'        => $ingrediënt['naam'],
                         'hoeveelheid' => $ingrediënt['hoeveelheid'],
                     ]);
                 }
             }
         }
 
-        return redirect()->route('gerechten.index')
+        return redirect()
+            ->route('gerechten.index')
             ->with('success', 'Recept succesvol toegevoegd!');
     }
 
     /**
-     * Display the specified resource.
+     * Detailpagina van één gerecht
      */
     public function show(Gerecht $gerecht)
     {
-        $gerecht->load('categorie'); // optioneel: laad relatie
+        $gerecht->load('categorie');
+
         return view('gerechten.show', compact('gerecht'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Formulier om een gerecht te bewerken
      */
     public function edit(Gerecht $gerecht)
     {
         $categorieen = Categorie::all();
+
         return view('gerechten.edit', compact('gerecht', 'categorieen'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Bijwerken van een gerecht
      */
     public function update(Request $request, Gerecht $gerecht)
     {
@@ -84,44 +95,66 @@ public function create()
             'naam'                   => 'required|string|max:255',
             'categorie_id'           => 'required|exists:categorieen,id',
             'bereidingswijze'        => 'nullable|string',
-            'bereidingstijd_minuten' => 'nullable|numeric|min:1|integer',
+            'bereidingstijd_minuten' => 'nullable|integer|min:1',
         ]);
 
         $gerecht->update($validated);
 
-        // Ingrediënten updaten zou hier ook moeten komen (verwijderen + opnieuw aanmaken of sync)
+        // Ingrediënten: eventueel later syncen/vernieuwen
 
-        return redirect()->route('gerechten.index')
+        return redirect()
+            ->route('gerechten.index')
             ->with('success', 'Recept succesvol bijgewerkt!');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Verwijderen van een gerecht
      */
     public function destroy(Gerecht $gerecht)
     {
-        $gerecht->delete();
+        \Log::info(
+            "DESTROY aangeroepen voor gerecht {$gerecht->id} ({$gerecht->naam})"
+        );
 
-        return redirect()->route('gerechten.index')
+        try {
+            $gerecht->delete();
+
+            \Log::info(
+                "Gerecht {$gerecht->id} succesvol verwijderd"
+            );
+        } catch (\Exception $e) {
+            \Log::error(
+                "Fout bij verwijderen gerecht {$gerecht->id}: {$e->getMessage()}"
+            );
+
+            throw $e;
+        }
+
+        return redirect()
+            ->route('gerechten.index')
             ->with('success', 'Recept succesvol verwijderd!');
     }
 
     /**
-     * Print / overzicht voor alle gerechten
+     * Printoverzicht
      */
     public function print()
     {
         $gerechten = Gerecht::with('categorie')->get();
+
         return view('gerechten.print', compact('gerechten'));
     }
 
+    /**
+     * Menukaart overzicht
+     */
     public function menukaart()
-{
-    $gerechten = Gerecht::with('categorie')
-        ->orderBy('categorie_id')
-        ->orderBy('naam')
-        ->get();
+    {
+        $gerechten = Gerecht::with('categorie')
+            ->orderBy('categorie_id')
+            ->orderBy('naam')
+            ->get();
 
-    return view('gerechten.menukaart', compact('gerechten'));
-}
+        return view('gerechten.menukaart', compact('gerechten'));
+    }
 }

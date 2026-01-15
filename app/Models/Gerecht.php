@@ -25,9 +25,8 @@ class Gerecht extends Model
         return $this->belongsTo(Categorie::class);
     }
 
-    // Relatie met ingrediënten (later toevoegen)
-    // public function ingrediënten()
-    // {
-    //     return $this->hasMany(Ingrediënt::class);
-    // }
+     public function ingrediënten()
+    {
+        return $this->hasMany(Ingrediënt::class, 'gerecht_id');
+    }
 }
