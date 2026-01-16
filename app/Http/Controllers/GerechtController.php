@@ -4,38 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\Gerecht;
 use App\Models\Categorie;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class GerechtController extends Controller
 {
-    /**
-     * Overzicht van alle gerechten
-     */
     public function index()
     {
-        $gerechten = Gerecht::with('categorie')
-            ->latest()
-            ->get();
-
+        $gerechten = Gerecht::with('categorie')->latest()->get();
         return view('gerechten.index', compact('gerechten'));
     }
 
-    /**
-     * Formulier om een gerecht aan te maken
-     */
     public function create()
     {
-        $categorieen = Categorie::whereIn('naam', [
-            'Voorgerecht',
-            'Hoofdgerecht',
-        ])->get();
+        $categorieen = Categorie::whereIn('naam', ['Voorgerecht', 'Hoofdgerecht'])->get();
+        $producten = Product::orderBy('naam')->get();
 
-        return view('gerechten.create', compact('categorieen'));
+        return view('gerechten.create', compact('categorieen', 'producten'));
     }
 
-    /**
-     * Opslaan van een nieuw gerecht
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -43,22 +30,25 @@ class GerechtController extends Controller
             'categorie_id'           => 'required|exists:categorieen,id',
             'bereidingswijze'        => 'nullable|string',
             'bereidingstijd_minuten' => 'nullable|integer|min:1',
+
+            'ingredienten'                  => 'required|array|min:1',
+            'ingredienten.*.product_id'     => 'required|exists:producten,id',
+            'ingredienten.*.hoeveelheid'    => 'required|string|max:100',
         ]);
 
-        $gerecht = Gerecht::create($validated);
+        // Alleen gerecht-velden
+        $gerecht = Gerecht::create([
+            'naam' => $validated['naam'],
+            'categorie_id' => $validated['categorie_id'],
+            'bereidingswijze' => $validated['bereidingswijze'] ?? null,
+            'bereidingstijd_minuten' => $validated['bereidingstijd_minuten'] ?? null,
+        ]);
 
-        if (is_array($request->ingrediënten ?? null)) {
-            foreach ($request->ingrediënten as $ingrediënt) {
-                if (
-                    !empty($ingrediënt['naam']) &&
-                    !empty($ingrediënt['hoeveelheid'])
-                ) {
-                    $gerecht->ingrediënten()->create([
-                        'naam'        => $ingrediënt['naam'],
-                        'hoeveelheid' => $ingrediënt['hoeveelheid'],
-                    ]);
-                }
-            }
+        foreach ($validated['ingredienten'] as $ing) {
+            $gerecht->ingredienten()->create([
+                'product_id'  => $ing['product_id'],
+                'hoeveelheid' => $ing['hoeveelheid'],
+            ]);
         }
 
         return redirect()
@@ -66,29 +56,21 @@ class GerechtController extends Controller
             ->with('success', 'Recept succesvol toegevoegd!');
     }
 
-    /**
-     * Detailpagina van één gerecht
-     */
     public function show(Gerecht $gerecht)
     {
-        $gerecht->load('categorie');
-
+        $gerecht->load(['categorie', 'ingredienten.product']);
         return view('gerechten.show', compact('gerecht'));
     }
 
-    /**
-     * Formulier om een gerecht te bewerken
-     */
     public function edit(Gerecht $gerecht)
     {
-        $categorieen = Categorie::all();
+        $gerecht->load('ingredienten.product');
+        $categorieen = Categorie::whereIn('naam', ['Voorgerecht', 'Hoofdgerecht'])->get();
+        $producten = Product::orderBy('naam')->get();
 
-        return view('gerechten.edit', compact('gerecht', 'categorieen'));
+        return view('gerechten.edit', compact('gerecht', 'categorieen', 'producten'));
     }
 
-    /**
-     * Bijwerken van een gerecht
-     */
     public function update(Request $request, Gerecht $gerecht)
     {
         $validated = $request->validate([
@@ -96,58 +78,50 @@ class GerechtController extends Controller
             'categorie_id'           => 'required|exists:categorieen,id',
             'bereidingswijze'        => 'nullable|string',
             'bereidingstijd_minuten' => 'nullable|integer|min:1',
+
+            'ingredienten'                  => 'required|array|min:1',
+            'ingredienten.*.product_id'     => 'required|exists:producten,id',
+            'ingredienten.*.hoeveelheid'    => 'required|string|max:100',
         ]);
 
-        $gerecht->update($validated);
+        $gerecht->update([
+            'naam' => $validated['naam'],
+            'categorie_id' => $validated['categorie_id'],
+            'bereidingswijze' => $validated['bereidingswijze'] ?? null,
+            'bereidingstijd_minuten' => $validated['bereidingstijd_minuten'] ?? null,
+        ]);
 
-        // Ingrediënten: eventueel later syncen/vernieuwen
+        // Oude ingrediënten verwijderen
+        $gerecht->ingredienten()->delete();
+
+        // Nieuwe toevoegen
+        foreach ($validated['ingredienten'] as $ing) {
+            $gerecht->ingredienten()->create([
+                'product_id'  => $ing['product_id'],
+                'hoeveelheid' => $ing['hoeveelheid'],
+            ]);
+        }
 
         return redirect()
             ->route('gerechten.index')
             ->with('success', 'Recept succesvol bijgewerkt!');
     }
 
-    /**
-     * Verwijderen van een gerecht
-     */
     public function destroy(Gerecht $gerecht)
     {
-        \Log::info(
-            "DESTROY aangeroepen voor gerecht {$gerecht->id} ({$gerecht->naam})"
-        );
-
-        try {
-            $gerecht->delete();
-
-            \Log::info(
-                "Gerecht {$gerecht->id} succesvol verwijderd"
-            );
-        } catch (\Exception $e) {
-            \Log::error(
-                "Fout bij verwijderen gerecht {$gerecht->id}: {$e->getMessage()}"
-            );
-
-            throw $e;
-        }
+        $gerecht->delete();
 
         return redirect()
             ->route('gerechten.index')
             ->with('success', 'Recept succesvol verwijderd!');
     }
 
-    /**
-     * Printoverzicht
-     */
     public function print()
     {
         $gerechten = Gerecht::with('categorie')->get();
-
         return view('gerechten.print', compact('gerechten'));
     }
 
-    /**
-     * Menukaart overzicht
-     */
     public function menukaart()
     {
         $gerechten = Gerecht::with('categorie')

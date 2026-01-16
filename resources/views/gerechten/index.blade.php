@@ -7,13 +7,13 @@
                 <div class="p-6 text-gray-900">
                     <div class="flex justify-between items-center mb-6">
                         <h1 class="text-2xl font-bold">Receptenlijst</h1>
-                        
+
                         <div class="space-x-4">
                             <a href="{{ route('gerechten.print') }}" target="_blank"
                                class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
                                 Print lijst
                             </a>
-                            
+
                             <a href="{{ route('gerechten.create') }}"
                                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
                                 Nieuw recept toevoegen
@@ -57,15 +57,16 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <a href="{{ route('gerechten.show', $gerecht) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Bekijk</a>
                                                 <a href="{{ route('gerechten.edit', $gerecht) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">Wijzig</a>
-<form action="{{ route('gerechten.destroy', $gerecht) }}" method="POST" class="inline-block">
-    @csrf
-    @method('DELETE')
-    <button type="submit"
-            class="text-red-600 hover:text-red-900 font-medium"
-            onclick="return confirm('Weet je zeker dat je \"{{ addslashes($gerecht->naam) }}\" wilt verwijderen? Dit kan niet ongedaan gemaakt worden.');">
-        Verwijder
-    </button>
-</form>
+
+                                                <form action="{{ route('gerechten.destroy', $gerecht) }}" method="POST" class="inline-block">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="text-red-600 hover:text-red-900 font-medium"
+                                                            onclick="return confirm('Weet je zeker dat je \"{{ addslashes($gerecht->naam) }}\" wilt verwijderen? Dit kan niet ongedaan gemaakt worden.');">
+                                                        Verwijder
+                                                    </button>
+                                                </form>
                                             </td>
                                         </tr>
                                     @endforeach

@@ -9,9 +9,8 @@ class Gerecht extends Model
 {
     use HasFactory;
 
-    protected $table = 'gerechten';  // ← Dit lost het op!
+    protected $table = 'gerechten';
 
-    // Optioneel: als je andere kolommen wilt vullen via mass assignment
     protected $fillable = [
         'naam',
         'categorie_id',
@@ -19,14 +18,13 @@ class Gerecht extends Model
         'bereidingstijd_minuten',
     ];
 
-    // Relatie met categorie (als je die al hebt)
     public function categorie()
     {
         return $this->belongsTo(Categorie::class);
     }
 
-     public function ingrediënten()
+    public function ingredienten()
     {
-        return $this->hasMany(Ingrediënt::class, 'gerecht_id');
+        return $this->hasMany(Ingredient::class);
     }
 }
