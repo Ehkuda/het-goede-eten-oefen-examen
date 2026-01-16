@@ -6,6 +6,7 @@ use App\Models\Gerecht;
 use App\Models\Categorie;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class GerechtController extends Controller
 {
@@ -118,8 +119,18 @@ class GerechtController extends Controller
 
     public function print()
     {
-        $gerechten = Gerecht::with('categorie')->get();
-        return view('gerechten.print', compact('gerechten'));
+    $gerechten = Gerecht::with('categorie')
+        ->orderBy('categorie_id')
+        ->orderBy('naam')
+        ->get();
+
+    return Pdf::view('gerechten.menukaart-print', compact('gerechten'))
+        ->format('a4')
+        ->landscape(false)          
+        ->margins(20, 15, 20, 15)   
+        ->name('menukaart-het-goede-eten.pdf')
+        ->download();               
+        
     }
 
     public function menukaart()

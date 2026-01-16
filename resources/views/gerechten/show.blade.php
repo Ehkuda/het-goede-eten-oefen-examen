@@ -1,92 +1,38 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-8">
-                    <div class="flex justify-between items-start mb-8">
-                        <div>
-                            <h1 class="text-3xl font-bold text-gray-900">
-                                {{ $gerecht->naam }}
-                            </h1>
-                            <p class="text-lg text-gray-600 mt-2">
-                                {{ $gerecht->categorie->naam ?? 'Geen categorie' }}
-                            </p>
-                        </div>
+<div class="py-12 bg-gray-50 min-h-screen">
+    <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+        <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-red-100">
+            <div class="bg-red-600 p-8 text-white flex justify-between items-center">
+                <div>
+                    <p class="text-red-200 text-xs font-black uppercase tracking-widest mb-1">{{ $gerecht->categorie->naam ?? 'Recept' }}</p>
+                    <h1 class="text-4xl font-black italic">{{ $gerecht->naam }}</h1>
+                </div>
+                <a href="{{ route('gerechten.index') }}" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl font-bold transition">← Terug</a>
+            </div>
 
-                        <a href="{{ route('gerechten.index') }}"
-                           class="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
-                            Terug naar lijst
-                        </a>
-                    </div>
+            <div class="p-10 grid grid-cols-1 md:grid-cols-3 gap-10">
+                <div class="md:col-span-2">
+                    <h3 class="text-2xl font-black text-gray-900 mb-4 border-b-2 border-red-100 pb-2 italic">Bereidingswijze</h3>
+                    <p class="text-gray-700 leading-relaxed text-lg whitespace-pre-line">
+                        {{ $gerecht->bereidingswijze }}
+                    </p>
+                </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- Links: details -->
-                        <div class="space-y-6">
-                            @if ($gerecht->bereidingstijd_minuten)
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                                        Bereidingstijd
-                                    </h3>
-                                    <p class="text-gray-700">
-                                        {{ $gerecht->bereidingstijd_minuten }} minuten
-                                    </p>
-                                </div>
-                            @endif
-
-                            @if ($gerecht->bereidingswijze)
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                                        Bereidingswijze
-                                    </h3>
-                                    <div class="prose text-gray-700">
-                                        {!! nl2br(e($gerecht->bereidingswijze)) !!}
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Rechts: ingrediënten -->
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                                Ingrediënten
-                            </h3>
-
-                            @if ($gerecht->ingredienten->isEmpty())
-                                <p class="text-gray-500 italic">
-                                    Nog geen ingrediënten toegevoegd.
-                                </p>
-                            @else
-                                <ul class="space-y-3">
-                                    @foreach ($gerecht->ingredienten as $ingredient)
-                                        <li class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-                                            <span class="font-medium">
-    {{ $ingredient->product->naam ?? 'Onbekend product' }}
-</span>
-                                            <span class="text-gray-600">
-                                                {{ $ingredient->hoeveelheid }}
-                                            </span>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="mt-10 flex justify-end space-x-4">
-                        <a href="{{ route('gerechten.edit', $gerecht) }}"
-                           class="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition">
-                            Wijzig recept
-                        </a>
-
-                        <a href="{{ route('gerechten.index') }}"
-                           class="px-6 py-3 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">
-                            Terug naar lijst
-                        </a>
-                    </div>
+                <div class="bg-red-50 p-6 rounded-2xl border border-red-100">
+                    <h3 class="text-lg font-black text-red-600 mb-4 uppercase tracking-tighter">🥘 Ingrediënten</h3>
+                    <ul class="space-y-3">
+                        @foreach($gerecht->ingredienten as $ingredient)
+                            <li class="flex justify-between border-b border-red-200/50 pb-2">
+                                <span class="font-bold text-gray-800">{{ $ingredient->product->naam }}</span>
+                                <span class="text-red-600 font-medium">{{ $ingredient->hoeveelheid }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
+</div>
 @endsection
